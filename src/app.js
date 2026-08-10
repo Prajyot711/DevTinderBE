@@ -2,115 +2,101 @@ const express = require('express');
 const connectDB = require("./config/database.js")
 const app = express();
 const User = require("./models/user.js")
+const { validateSignupData, validateLoginData } = require("./utils/validation.js")
+const cookieParser = require('cookie-parser');
+const jwt = require("jsonwebtoken")
+const {userAuth} = require("./middleware/auth.js")
 
 app.use(express.json())
+app.use(cookieParser())
 
-app.post("/signup",async (req,res)=>{
+app.post("/signup", async (req, res) => {
+  try {
+    //validating signup data
+    validateSignupData(req)
 
-  const user = new User(req.body)
-  try{
+    const { firstName, lastName, emailId, password } = req.body
+
+    //encryting the password
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    const user = new User({
+      firstName: firstName,
+      lastName: lastName,
+      emailId: emailId,
+      password: passwordHash
+    })
     await user.save()
     res.send("User Added Successfully")
-  }catch(err){
-    res.status(400).send("Error saving the User:" + err.message)
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message)
   }
-  
+
 })
 
-//Find user
-// app.get("/users", async (req,res) => {
-//   const userEmail = req.body.emailId;
+//login user
+app.post("/login", async (req, res) => {
+  try {
+    validateLoginData(req)
+    const { emailId, password } = req.body
 
-//   try{
-//     const users = await User.find({emailId: userEmail})
-//     if(userEmail.length === 0 ){
-//       res.status(404).send("User not found!")
-//     }else{
-//       res.send(users)
-//     }
-//   }catch(err){
-//       res.status(400).send("Sorry, Something went wrong...!")
-//   }
-// })
+    const user = await User.findOne({ emailId: emailId })
 
-//find 1 user
-app.get("/users", async (req,res) => {
-  const userEmail = req.body.emailId;
+    if (!user) {
+      throw new Error("User is not found!")
+    }
 
+    const isPasswordValid = await user.validatePassword(password)
+
+    if (isPasswordValid) {
+      //Create JWT Token
+      const token = await user.getJWT()
+
+      //Add token to cookie
+      res.cookie("token", token, {expires: new Date(Date.now() + 8 * 3600000)})
+      res.send("Login Successful!")
+    } else {
+      throw new Error("Password is incorrect!")
+    }
+
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message)
+  }
+})
+
+//Get Profile
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user
+    res.send(user)
+  }catch (err) {
+    res.status(400).send("ERROR: " + err.message)
+  }
+
+})
+
+app.post("/sendConnectionRequest", userAuth, async (req,res) => {
   try{
-    const user = await User.findOne({emailId: userEmail})
-    if(!user){
-      res.status(404).send("User not found!")
-    }else{
-      res.send(user)
-    }
+    res.send("Connection Request send")
   }catch(err){
-      res.status(400).send("Sorry, Something went wrong...!")
-      
+    res.status(400).send("ERROR: " + err.message)
   }
 })
 
-//delete user
-
-app.delete("/users", async (req,res) => {
-    const userId = req.body.userId
-
-    try{
-        const user = await User.findByIdAndDelete(userId)
-        res.send("User deleted successfully!")
-    }catch(err){
-        res.status(400).send("Sorry, Something went wrong...!")
-    }
-})
-
-app.patch("/users/:userId", async (req,res) => {
-    const userId = req.params?.userId;
-    const data = req.body;
-
-    try{
-      const allowedUpdates = [
-        "about",
-        "gender",
-        "age",
-        "skills",
-        "photoUrl"
-      ]
-
-      const isUpdateAllowed = Object.keys(data).every((k)=>allowedUpdates.includes(k))
-
-      if(!isUpdateAllowed){
-        throw new Error("Update not allowed")
-      }
-
-      if(data?.skills.length>10){
-        throw new Error("Skills cannot be more than 10")
-      }
-
-        const user = await User.findByIdAndUpdate(userId,data,{
-          returnDocument:"before",
-          runValidators:true
-        })
-        console.log(user)
-        res.send("User updated successfully!")
-    }catch(err){
-        res.status(400).send("Update Failed:" + err.message)
-    }
-})
 
 
 
 
 
 
-
-connectDB() 
-  .then(()=>{
+connectDB()
+  .then(() => {
     console.log("Database connection Successful..!!")
     app.listen(3000, () => {
       console.log("Server is listed on port 3000")
     });
-  }).catch((err)=>{
+  }).catch((err) => {
     console.log("Database connection Failed...!")
   })
- 
+
 
