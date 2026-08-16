@@ -4,7 +4,8 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const authRouter = require("../src/routes/auth.js")
 const profileRouter = require("../src/routes/profile.js")
-const requestRouter = require("../src/routes/requests.js")
+const requestRouter = require("../src/routes/requests.js");
+const userRouter = require('../src/routes/userRoute.js');
 
 
 app.use(express.json())
@@ -13,6 +14,7 @@ app.use(cookieParser())
 app.use("/", authRouter)
 app.use("/", profileRouter)
 app.use("/", requestRouter)
+app.use("/", userRouter)
 
 
 connectDB()
