@@ -9,7 +9,7 @@ const requestRouter = require("../src/routes/requests.js");
 const userRouter = require('../src/routes/userRoute.js');
 const cors = require("cors");
 //const paymentRouter = require('./routes/payment.js');
-const port = process.env.PORT
+//const port = process.env.PORT
 
 
 app.use(cors({
@@ -29,7 +29,7 @@ app.use("/", userRouter)
 connectDB()
   .then(() => {
     console.log("Database connection Successful..!!")
-    app.listen(port, () => {
+    app.listen(3000, () => {
       console.log("Server is listed on port 3000")
     });
   }).catch((err) => {
