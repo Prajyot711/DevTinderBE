@@ -8,7 +8,7 @@ const profileRouter = require("../src/routes/profile.js")
 const requestRouter = require("../src/routes/requests.js");
 const userRouter = require('../src/routes/userRoute.js');
 const cors = require("cors");
-const paymentRouter = require('./routes/payment.js');
+//const paymentRouter = require('./routes/payment.js');
 const port = process.env.PORT
 
 
@@ -23,7 +23,7 @@ app.use("/", authRouter)
 app.use("/", profileRouter)
 app.use("/", requestRouter)
 app.use("/", userRouter)
-app.use("/", paymentRouter)
+//app.use("/", paymentRouter)
 
 
 connectDB()
