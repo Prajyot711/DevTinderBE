@@ -23,8 +23,12 @@ authRouter.post("/signup", async (req, res) => {
       emailId: emailId,
       password: passwordHash
     })
-    await user.save()
-    res.send("User Added Successfully")
+    const savedUser = await user.save();
+    const token = await savedUser.getJWT()
+
+    //Add token to cookie
+    res.cookie("token", token, {expires: new Date(Date.now() + 8 * 3600000)})
+    res.status(200).json({message : "Signup Successful!", data : savedUser})
   } catch (err) {
     res.status(400).send("ERROR: " + err.message)
   }
@@ -51,7 +55,7 @@ authRouter.post("/login", async (req, res) => {
 
       //Add token to cookie
       res.cookie("token", token, {expires: new Date(Date.now() + 8 * 3600000)})
-      res.send("Login Successful!")
+      res.status(200).json({message : "Login Successful!", data : user})
     } else {
       throw new Error("Password is incorrect!")
     }

@@ -6,7 +6,7 @@ const {validateProfileEditData} = require("../utils/validation.js")
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const user = req.user
-    res.send(user)
+    res.status(200).json({message: 'Proile page opened', data: user})
   }catch (err) {
     res.status(400).send("ERROR: " + err.message)
   }
@@ -27,7 +27,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
     await loggedInUser.save()
 
-    res.json({'message' : `${loggedInUser.firstName} , Your profile is updated`, 'data' : loggedInUser})
+    res.status(200).json({'message' : `${loggedInUser.firstName} , Your profile is updated`, 'data' : loggedInUser})
   }catch (err) {
     res.status(400).send("ERROR: " + err.message)
   }
